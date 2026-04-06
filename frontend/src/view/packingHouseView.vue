@@ -1,10 +1,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import RecipientPicker from '@/components/RecipientPicker.vue'
-import {
-  txReceiveLot, txInitiateTransfer, txSplitLot,
-  Status, hasPendingTransfer, parseContractError, formatLotId, assertWalletMatch,
-} from '@/utils/blockchain'
+import {txReceiveLot, txInitiateTransfer, txSplitLot,Status, hasPendingTransfer, parseContractError, formatLotId, assertWalletMatch} from '@/utils/blockchain'
 import { fetchPendingLots, fetchOwnedLots, getDisplayNames, recordLotEvent } from '@/utils/api'
 
 const walletAddress = ref('')
@@ -279,7 +276,7 @@ function disconnect() {
               </div>
             </div>
             <button v-if="item.parentLotId === 0" class="btn-grade" style="margin-top:14px" @click="startSplit(item.lotId)">
-              Split Lot (on-chain)
+              Split Lot 
             </button>
           </div>
         </div>

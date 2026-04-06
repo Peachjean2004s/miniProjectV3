@@ -76,7 +76,12 @@ async function queryFilterBatched(filter, fromBlock, toBlock) {
 
 // ── Load lot ทั้งหมด ─────────────────────────────────────────────────────────
 export async function loadAllLots() {
+  console.log("🔗 RPC URL:", process.env.ALCHEMY_SEPOLIA_URL)
+  console.log("📄 Contract Address:", contract.target || CONTRACT_ADDRESS)
+
   const count = Number(await contract.lotCounter())
+  console.log("🔢 Lot Counter from Smart Contract:", count)
+
   if (count === 0) return []
   const results = await Promise.allSettled(
     Array.from({ length: count }, (_, i) =>

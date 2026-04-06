@@ -1,9 +1,6 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
-import {
-  txReceiveLot, txSellLot,
-  Status, parseContractError, formatLotId, assertWalletMatch,
-} from '@/utils/blockchain'
+import {txReceiveLot, txSellLot,Status, parseContractError, formatLotId, assertWalletMatch} from '@/utils/blockchain'
 import { fetchPendingLots, fetchOwnedLots, fetchLotTrackHistory, getDisplayNames, recordLotEvent } from '@/utils/api'
 
 const walletAddress = ref('')
@@ -88,8 +85,18 @@ async function markSold(lotId) {
 }
 
 async function handleTrack() {
-  const id = Number(trackId.value.trim())
-  if (!id) return
+  const rawInput = trackId.value.trim()
+  
+  const match = rawInput.match(/^(?:LOT\s*#?\s*)?(\d{2,})$/i)
+  
+  if (!match) {
+    trackError.value = 'Invalid format. Please use "Lot#0001" or "0001"'
+    return
+  }
+
+  const id = Number(match[1])
+  if (!id) return 
+  
   isTracking.value = true
   trackError.value = ''
   trackResult.value = null
@@ -97,7 +104,6 @@ async function handleTrack() {
     const result = await fetchLotTrackHistory(id)
     if (!result) { trackError.value = `LOT #${String(id).padStart(4,'0')} not found`; return }
 
-    // Resolve display names for all actors
     const actorAddrs = [...new Set(result.steps.map(s => s.actor))]
     const names = await getDisplayNames(actorAddrs)
     result.steps.forEach(s => { s.displayName = names[s.actor] || shortAddress(s.actor) })

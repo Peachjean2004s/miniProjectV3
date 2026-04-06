@@ -1,5 +1,5 @@
 <script setup>
-import { ref, computed, onMounted } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import RecipientPicker from '@/components/RecipientPicker.vue'
 import VarietyPicker from '@/components/VarietyPicker.vue'
@@ -14,6 +14,7 @@ const walletAddress = ref('')
 const activePage = ref('lots')
 const lots = ref([])
 const isLoadingLots = ref(false)
+const loadError = ref('')
 
 // Create Lot
 const variety = ref('')
@@ -32,18 +33,40 @@ const isTransferring = ref(false)
 
 onMounted(async () => {
   const stored = localStorage.getItem('walletAddress')
-  if (stored) { walletAddress.value = stored; await refreshLots() }
+  if (stored) { 
+    walletAddress.value = stored
+    await refreshLots() 
+  } else {
+    loadError.value = 'Wallet not connected'
+  }
+})
+
+// Reload lots when wallet address changes
+watch(walletAddress, async (newAddress) => {
+  if (newAddress) {
+    await refreshLots()
+  }
 })
 
 async function refreshLots() {
+  if (!walletAddress.value) {
+    loadError.value = 'No wallet address'
+    return
+  }
   isLoadingLots.value = true
+  loadError.value = ''
   try {
+    console.log('Fetching lots for wallet:', walletAddress.value)
     const all = await fetchOrchardLots(walletAddress.value)
+    console.log('Fetched lots:', all)
     // แสดง lots ทั้งหมดที่ user เป็น orchard (creator/owner)
     // Backend ทำการ filter แล้ว เลยไม่ต้อง filter เพิ่มเติม
     lots.value = all
   }
-  catch (e) { console.error('fetchOrchardLots:', e) }
+  catch (e) { 
+    loadError.value = e.message || 'Failed to load lots'
+    console.error('fetchOrchardLots error:', e) 
+  }
   finally { isLoadingLots.value = false }
 }
 
@@ -158,6 +181,9 @@ function disconnect() {
 
       <!-- ══ MY LOTS ══ -->
       <div v-if="activePage === 'lots'" class="content">
+        <!-- Error message -->
+        <div v-if="loadError" class="alert-error">❌ {{ loadError }}</div>
+        
         <!-- Summary -->
         <div class="summary-row">
           <div class="summary-card">
